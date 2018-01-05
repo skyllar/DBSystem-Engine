@@ -1,0 +1,14 @@
+PAGE_SIZE 1024
+NUM_PAGES 10
+PATH_FOR_DATA ./
+BEGIN
+employee
+ID, integer
+NAME, varchar
+END
+BEGIN
+student
+Roll, integer
+NAME, varchar
+BRANCH, varchar
+END
