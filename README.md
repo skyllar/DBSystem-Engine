@@ -13,7 +13,8 @@ Extra Features:
  3. Handled Join between two relations.
 
 Usage:
-bash run.sh <Path to Config File> <Path to Input File>
+
+	bash run.sh <Path to Config File> <Path to Input File>
 
 Short Overview of the Approach Used:
 
