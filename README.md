@@ -20,6 +20,6 @@ Short Overview of the Approach Used:
 	2. For each query:
 		 a. Validation is checked.
 		 b. Conditions are checked and corresponding line numbers are stored in set.
-		 c. Records from the file are fetched only for these line numbers.
+		 c. Records from the file are fetched only for these line numbers. 
 		 d. Records are obtained from LRU everytime. So Better page size and Page count will improve the performance.
 		
