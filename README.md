@@ -16,6 +16,7 @@ Usage:
 bash run.sh <Path to Config File> <Path to Input File>
 
 Short Overview of the Approach Used:
+
 	1. Index is initially created for all the columns of the table.
 	2. For each query:
 		 a. Validation is checked.
