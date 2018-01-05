@@ -1,5 +1,7 @@
 package com.db.phase2;
 
+import gudusoft.gsqlparser.pp.processor.type.comm.DistinctKeyWordProcessor;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -8,6 +10,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map.Entry;
 
 import com.db.phase2.DBSystem.tableInfo;
@@ -22,12 +25,13 @@ public class BPlusTree {
 		public Node mNextNode;
 	}
 
+	Long distinctCols = (long) 0;
 	String max = "";
 	String min = "";
 
 	public int compare(String s1, String s2) {
-		//System.out.println("^^^^^^^" + s1);
-		//System.out.println("%%%%%%%" + s2);
+		// System.out.println("^^^^^^^" + s1);
+		// System.out.println("%%%%%%%" + s2);
 		if (columnType.length() >= 7
 				&& columnType.substring(0, 7).equalsIgnoreCase("varchar"))
 			return (s1.compareTo(s2));
@@ -69,12 +73,17 @@ public class BPlusTree {
 		// System.out.println("colentry:"+colentry+"min:"+min+" max:"+max);
 
 		if (search(colentry) != null) {
+			// System.out.println("$$");
+			// System.out.println("--->" + colentry);
 			StringBuilder sb = new StringBuilder();
 			sb.append(n.mObjects[index]);
 			sb.append(",");
 			sb.append(object);
-			n.mObjects[index] = sb.toString();
+			// n.mObjects[index] = sb.toString();
+			// System.out.println("Object" + sb);
+			add(colentry, object);
 		} else {
+			distinctCols++;
 			add(colentry, object);
 		}
 		// System.out.println("---end---");
@@ -239,7 +248,7 @@ public class BPlusTree {
 
 	public HashSet<String> rangeQuery(String low, String high, boolean l,
 			boolean h) {
-		HashSet<String> hset = new HashSet<String>();
+		LinkedHashSet<String> hset = new LinkedHashSet<String>();
 		Node node = mRootNode;
 		while (!node.mIsLeafNode) {
 			node = node.mChildNodes[0];
@@ -467,6 +476,10 @@ public class BPlusTree {
 		}
 	}
 
+	public static Long getDistinctCount() {
+		return null;
+	}
+
 	public static void main(String[] args) {
 		BPlusTree bPlusTree = new BPlusTree();
 		/*
@@ -480,15 +493,28 @@ public class BPlusTree {
 		 */
 		bPlusTree.columnType = "integer";
 
-		String str[] = new String[] { "0", "1", "2", "3", "4", "5", "6", "7",
+		String str[] = new String[] { "0", "1", "2", "3", "3", "5", "6", "7",
 				"8", "9", "9.2" };
 		for (int i = 0; i < str.length; i++) {
-			bPlusTree.add(i + "", str[i]);
+			bPlusTree.addWithDuplicationHandled(str[i], i);
 		}
 
-		System.out.println(bPlusTree.search("2"));
-		System.out.println(bPlusTree.toString());
-		System.out.println(bPlusTree.rangeQuery("2", "7", false, true));
+		bPlusTree.addWithDuplicationHandled("3", "12");
+		bPlusTree.addWithDuplicationHandled("3", "13");
+		bPlusTree.addWithDuplicationHandled("3", "14");
+		bPlusTree.addWithDuplicationHandled("7", "70");
+		bPlusTree.addWithDuplicationHandled("9", "90");
+		bPlusTree.addWithDuplicationHandled("9.2", "92");
+		bPlusTree.addWithDuplicationHandled("0", "00");
+
+		bPlusTree.addWithDuplicationHandled("3", "15");
+		bPlusTree.addWithDuplicationHandled("3", "16");
+		bPlusTree.addWithDuplicationHandled("3", "17");
+		bPlusTree.addWithDuplicationHandled("3", "18");
+
+		// System.out.println(bPlusTree.search("2"));
+		System.out.println("---" + bPlusTree.toString());
+		System.out.println(bPlusTree.rangeQuery("1", "18", false, true));
 
 		/*
 		 * bPlusTree.columnType="integer"; String str[]=new

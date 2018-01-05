@@ -1,5 +1,20 @@
 package com.db.phase2;
 
+import gudusoft.gsqlparser.EDbVendor;
+import gudusoft.gsqlparser.TBaseType;
+import gudusoft.gsqlparser.TCustomSqlStatement;
+import gudusoft.gsqlparser.TGSqlParser;
+import gudusoft.gsqlparser.TSourceToken;
+import gudusoft.gsqlparser.nodes.TColumnDefinition;
+import gudusoft.gsqlparser.nodes.TExpression;
+import gudusoft.gsqlparser.nodes.TJoin;
+import gudusoft.gsqlparser.nodes.TJoinItem;
+import gudusoft.gsqlparser.nodes.TOrderByItemList;
+import gudusoft.gsqlparser.nodes.TResultColumn;
+import gudusoft.gsqlparser.nodes.TTableList;
+import gudusoft.gsqlparser.stmt.TCreateTableSqlStatement;
+import gudusoft.gsqlparser.stmt.TSelectSqlStatement;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -7,35 +22,21 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectInputStream.GetField;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.Vector;
-import java.util.Map.Entry;
-import java.util.concurrent.locks.Condition;
 
 import com.db.phase2.DBSystem.pageContent;
-import com.db.phase2.DBSystem.tableInfo;
-
-import gudusoft.gsqlparser.*;
-import gudusoft.gsqlparser.nodes.TColumnDefinition;
-import gudusoft.gsqlparser.nodes.TExpression;
-import gudusoft.gsqlparser.nodes.TJoin;
-import gudusoft.gsqlparser.nodes.TJoinList;
-import gudusoft.gsqlparser.nodes.TOrderByItemList;
-import gudusoft.gsqlparser.nodes.TResultColumn;
-import gudusoft.gsqlparser.stmt.TCreateTableSqlStatement;
-import gudusoft.gsqlparser.stmt.TSelectSqlStatement;
 
 public class Main {
 
@@ -47,9 +48,7 @@ public class Main {
 	static LinkedList<String> invalidColumns;
 	static HashMap<String, String> aliasTable;
 	static HashMap<String, Boolean> duplicateColOrNot = new HashMap<String, Boolean>();
-
 	static StringBuilder result = new StringBuilder();
-
 	static String filename = "temp";
 	static String finalfile = "result";
 	static int filecount = 0;
@@ -69,6 +68,19 @@ public class Main {
 	static HashMap<String, Integer> globHmp;
 	static String globTableName;
 
+	static String tableName1;
+	static String tableName2;
+	static String columnName1;
+	static String columnName2;
+
+	public static class JoinTableInfo {
+		String joinWith;
+		HashMap<String, String> joinColumns;
+		HashMap<String, Integer> distinctValues = new HashMap<String, Integer>();
+	}
+
+	public static HashMap<String, JoinTableInfo> joinTable = new LinkedHashMap<String, JoinTableInfo>();
+
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
@@ -78,21 +90,35 @@ public class Main {
 			DBSystem.readConfig(configPath);
 			DBSystem.populateDBInfo();
 			BPlusTree.intialiseBPTree();
-			// System.out.println("Done Initialisation..");
+
+			//System.out.println("Done Initialisation..");
 			long time1 = System.currentTimeMillis();
-			/*
-			 * for (Entry<String, tableInfo> entry :
-			 * DBSystem.pageTree.entrySet()) { System.out.println("Table Name:"
-			 * + entry.getKey()); for (Entry<String, String> colentry :
-			 * DBSystem.pageTree .get(entry.getKey()).coltypepair.entrySet()) {
-			 * System.out.println((BPlusTree.bPlusTreeStructure.get(
-			 * entry.getKey()).get(colentry.getKey()).toString()));
-			 * System.out.println("MAX:" +
-			 * BPlusTree.bPlusTreeStructure.get(entry.getKey())
-			 * .get(colentry.getKey()).max); System.out.println("MIN:" +
-			 * BPlusTree.bPlusTreeStructure.get(entry.getKey())
-			 * .get(colentry.getKey()).min); } }
-			 */
+			
+			// DBSystem.insertRecord("student", "8,Z,Mtech");
+
+			// for (Entry<String, tableInfo> entry :
+			// DBSystem.pageTree.entrySet()) {
+			// System.out.println("Table Name:" + entry.getKey());
+			// for (Entry<String, String> colentry : DBSystem.pageTree
+			// .get(entry.getKey()).coltypepair.entrySet()) {
+			// System.out.println("Column Name:" + colentry.getKey());
+			// System.out.println((BPlusTree.bPlusTreeStructure.get(
+			// entry.getKey()).get(colentry.getKey()).toString()));
+			// // System.out.println("MAX:"
+			// // + BPlusTree.bPlusTreeStructure.get(entry.getKey())
+			// // .get(colentry.getKey()).max);
+			// // System.out.println("MIN:"
+			// // + BPlusTree.bPlusTreeStructure.get(entry.getKey())
+			// // .get(colentry.getKey()).min);
+			// System.out.println("Distinct:"
+			// + DBSystem.V(entry.getKey(), colentry.getKey()));
+			// }
+			// }
+
+			// SortMergeJoin.sortMergeMain("./", "student", "Roll", "employee1",
+			// "NAME");
+			// SortMergeJoin.sortMergeMain("./", "employee1", "ID", "employee2",
+			// "ID");
 
 			Scanner in = new Scanner(System.in);
 			int len = Integer.parseInt(in.nextLine());
@@ -113,6 +139,17 @@ public class Main {
 			e.printStackTrace();
 		}
 
+	}
+
+	public static void innerJoin(String table1, String col1, String table2,
+			String col2) {
+		// col1 = "employee1.ID";
+		col1 = columnFlag.get(col1)[2];
+		// col2 = "employee2.ID";
+		col2 = columnFlag.get(col2)[2];
+		SortMergeJoin.sortMergeMain(DBSystem.pathForData, table1, col1, table2,
+				col2);
+		System.out.println("Done!!");
 	}
 
 	static void processQuery() {
@@ -192,7 +229,6 @@ public class Main {
 						.getOrderbyClause().toString());
 			}
 		} else {
-
 			for (int i = 0; i < pStmt.joins.size(); i++) {
 
 				TJoin join = pStmt.joins.getJoin(i);
@@ -200,8 +236,56 @@ public class Main {
 				case TBaseType.join_source_fake:
 					break;
 				case TBaseType.join_source_table:
+					Vector<String> tableNames = new Vector<String>();
+					TJoinItem joinItem = join.getJoinItems().getJoinItem(0);
+					if (join.getJoinItems().size() == 1) {
+						String table1 = join.getTable().toString().trim();
+						String table2 = joinItem.getTable().toString().trim();
+						String left = joinItem.getOnCondition()
+								.getLeftOperand().toString();
+						String right = joinItem.getOnCondition()
+								.getRightOperand().toString();
+						String leftTable = columnFlag.get(left)[1];
+						String rightTable = columnFlag.get(right)[1];
+						left = columnFlag.get(left)[2].trim();
+						right = columnFlag.get(right)[2].trim();
+						
+						if(!leftTable.equals(table1)){
+							String temp =leftTable;
+							leftTable = rightTable;
+							rightTable = temp;
+							temp =left;
+							left = right;
+							right = temp;
+						}
+						
+						SortMergeJoin.sortMergeMain(DBSystem.pathForData,
+								leftTable, left, rightTable, right);
+						
+						SortMergeJoin.displayResults(pStmt, SortMergeJoin.finalFileName, leftTable, rightTable);
+						return;
+					} else {
+						tableNames.add("$$");
+						HashMap<String, HashSet<String>> joinPair = new HashMap<String, HashSet<String>>();
+						tableNames.add(join.getTable().toString().trim());
+						for (int j = 0; j < join.getJoinItems().size(); j++) {
+							joinItem = join.getJoinItems().getJoinItem(j);
+							tableNames.add(joinItem.getTable().toString()
+									.trim());
+							fillJoinAttributes(joinItem.getOnCondition(), null,
+									null, joinPair);
+							// System.out.println("1--");
+						}
+						// for (String s : tableNames) {
+						// System.out.println(s);
+						// }
+						JoinOrder.JoinOrderMain(joinPair, tableNames);
+						return;
+					}
+
 				}
 			}
+
 			TResultColumn resultColumn = null;
 			for (int i = 0; i < pStmt.getResultColumnList().size(); i++) {
 				resultColumn = pStmt.getResultColumnList().getResultColumn(i);
@@ -961,6 +1045,15 @@ public class Main {
 		return h;
 	}
 
+	public static void initializeJoinVariables(TTableList tables) {
+
+		if (tables.size() >= 2) {
+			tableName1 = tables.getTable(0).getFullName();
+			tableName2 = tables.getTable(1).getFullName();
+			TSourceToken t = tables.getStartToken();
+		}
+	}
+
 	static boolean checkValidity(String query) {
 		sqlparser = new TGSqlParser(EDbVendor.dbvoracle);
 		duplicateColOrNot.clear();
@@ -1122,11 +1215,14 @@ public class Main {
 			result.append("Tablename:");
 			// System.out.print("Tablename:");
 			String comma = ",";
+			// System.out.println("++++++" + pStmt.joins.size());
 			for (int i = 0; i < pStmt.joins.size(); i++) {
 				if (i == pStmt.joins.size() - 1) {
 					comma = "\n";
 				}
+				// System.out.println(pStmt.joins.size());
 				TJoin join = pStmt.joins.getJoin(i);
+				tables.add(join.getTable().toString().trim());
 				switch (join.getKind()) {
 				case TBaseType.join_source_fake:
 					if (!DBSystem.pageTree.containsKey(join.getTable()
@@ -1140,10 +1236,12 @@ public class Main {
 						aliasTable.put(join.getTable().toString(), join
 								.getTable().getAliasClause().toString());
 
-					// System.out.printf(">>>>>%s Alias: %s%s",
-					// join.getTable().toString(),(join.getTable().getAliasClause()
-					// !=null)?join.getTable().getAliasClause().toString():"",comma);
-					tables.add(join.getTable().toString());
+					// System.out.printf(">>>>>%s Alias: %s%s", join.getTable()
+					// .toString(),
+					// (join.getTable().getAliasClause() != null) ? join
+					// .getTable().getAliasClause().toString()
+					// : "", comma);
+					// tables.add(join.getTable().toString());
 					break;
 				case TBaseType.join_source_table:
 					if (!DBSystem.pageTree.containsKey(join.getTable()
@@ -1152,14 +1250,33 @@ public class Main {
 						return;
 					}
 					result.append(join.getTable().toString() + comma);
-					// System.out.printf("%s%s", join.getTable().toString(),
-					// comma);
+					// System.out.printf("\ntable: \n\t%s, alias:%s\n", join
+					// .getTable().toString(), (join.getTable()
+					// .getAliasClause() != null) ? join.getTable()
+					// .getAliasClause().toString() : "");
+
+					for (int j = 0; j < join.getJoinItems().size(); j++) {
+						TJoinItem joinItem = join.getJoinItems().getJoinItem(j);
+						// System.out.printf("Join type:%s\n", joinItem
+						// .getJoinType().toString());
+						// System.out.printf("table: %s, alias:%s\n", joinItem
+						// .getTable().toString(), (joinItem.getTable()
+						// .getAliasClause() != null) ? joinItem
+						// .getTable().getAliasClause().toString() : "");
+
+						String table1 = join.getTable().toString().trim();
+						String table2 = joinItem.getTable().toString().trim();
+
+						tables.add(table2);
+						if (joinItem.getOnCondition() != null) {
+
+						} else if (joinItem.getUsingColumns() != null) {
+						}
+					}
 					if (join.getTable().getAliasClause() != null)
 						aliasTable.put(join.getTable().toString(), join
 								.getTable().getAliasClause().toString());
-					tables.add(join.getTable().toString());
 
-					// System.out.println("unknown type in join!");
 					break;
 				}
 			}
@@ -1171,6 +1288,7 @@ public class Main {
 			while (it.hasNext()) {
 
 				tablename = it.next();
+				// System.out.println(tablename);
 				columnnames = DBSystem.pageTree.get(tablename).coltypepair
 						.keySet();
 				for (String column : columnnames) {
@@ -1178,22 +1296,25 @@ public class Main {
 					if (columnFlag.containsKey(column))
 						invalidColumns.add(column);
 					else {
-						String newcol[] = new String[2];
+						String newcol[] = new String[3];
 						newcol[0] = DBSystem.pageTree.get(tablename).coltypepair
 								.get(column);
 						newcol[1] = tablename;
+						newcol[2] = column;
 						columnFlag.put(column, newcol);
 					}
-					String newcol[] = new String[2];
+					String newcol[] = new String[3];
 					newcol[0] = DBSystem.pageTree.get(tablename).coltypepair
 							.get(column);
 					newcol[1] = tablename;
+					newcol[2] = column;
 					columnFlag.put(tablename + "." + column, newcol);
 
 					if (aliasTable.containsKey(tablename)) {
 						newcol[0] = DBSystem.pageTree.get(tablename).coltypepair
 								.get(column);
 						newcol[1] = tablename;
+						newcol[2] = column;
 						columnFlag.put(
 								aliasTable.get(tablename) + "." + column,
 								newcol);
@@ -1446,9 +1567,88 @@ public class Main {
 		}
 	}
 
-	private static void verifyOperandType(TExpression condition) {
-		// TODO Auto-generated method stub
+	private static void fillJoinAttributes(TExpression condition,
+			String table1, String table2,
+			HashMap<String, HashSet<String>> joinPair) {
 
+		// System.out.println("$$$" + condition);
+
+		if (condition != null && condition.getLeftOperand() == null
+				&& condition.getRightOperand() == null) {
+			return;
+		}
+		if (condition.getOperatorToken() == null
+				|| condition.getOperatorToken().toString()
+						.equalsIgnoreCase("and")
+				|| condition.getOperatorToken().toString()
+						.equalsIgnoreCase("or")) {
+
+			// System.out.println("Condition:"+condition+":left:"+condition.getLeftOperand()+":Operator:"+condition.getOperatorToken()+":Right:"+condition.getRightOperand());
+
+			if (condition.getLeftOperand() != null) {
+				fillJoinAttributes(condition.getLeftOperand(), table1, table2,
+						joinPair);
+				// System.out.println("Getting:"+h2+":condition:"+condition);
+			}
+			if (condition.getRightOperand() != null) {
+				fillJoinAttributes(condition.getRightOperand(), table1, table2,
+						joinPair);
+				// System.out.println("Getting:"+h1+":condition:"+condition);
+			}
+
+			if (condition.getOperatorToken() == null) {
+				// System.out.println("$$$" + condition);
+				return;
+			}
+
+			if (condition.getOperatorToken().toString().equalsIgnoreCase("and")) {
+				return;
+			}
+			if (condition.getOperatorToken().toString().equalsIgnoreCase("or")) {
+				return;
+			}
+		} else {
+
+			if (condition.getLeftOperand() != null
+					&& condition.getRightOperand() != null) {
+				// System.out.println("$$" + condition.getLeftOperand() + "$$"
+				// + condition.getOperatorToken() + "$$"
+				// + condition.getRightOperand() + "$$");
+				String leftCol = condition.getLeftOperand().toString().trim();
+				String rightCol = condition.getRightOperand().toString().trim();
+				// System.out.println("**" + leftCol);
+				// System.out.println("&&" + rightCol);
+				String leftTable = columnFlag.get(leftCol)[1];
+				String rightTable = columnFlag.get(rightCol)[1];
+
+				leftCol = leftTable + "." + columnFlag.get(leftCol)[2];
+				rightCol = rightTable + "." + columnFlag.get(rightCol)[2];
+
+				// fillJoinTableDetails(leftTable, leftCol, rightCol);
+				// fillJoinTableDetails(rightTable, rightCol, leftCol);
+
+				if (!joinPair.containsKey(leftCol)) {
+					HashSet<String> hs = new HashSet<String>();
+					joinPair.put(leftCol, hs);
+				}
+				joinPair.get(leftCol).add(rightCol);
+
+				if (!joinPair.containsKey(rightCol)) {
+					HashSet<String> hs = new HashSet<String>();
+					joinPair.put(rightCol, hs);
+				}
+				joinPair.get(rightCol).add(leftCol);
+
+				return;
+
+			} else {
+				return;
+			}
+		}
+		return;
+	}
+
+	private static void verifyOperandType(TExpression condition) {
 		String leftOperand = condition.getLeftOperand().toString();
 		String rightOperand = condition.getRightOperand().toString();
 

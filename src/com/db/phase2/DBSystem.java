@@ -4,6 +4,8 @@ import java.io.*;
 import java.util.*;
 import java.util.Map.Entry;
 
+import com.db.phase2.DBSystem.pageNumInfo;
+
 public class DBSystem {
 
 	static StringBuilder s;
@@ -102,6 +104,10 @@ public class DBSystem {
 		// if (flag == 1)
 		// System.out.println("MISS " + pC1.slotNo);
 		return (pC1.data);
+	}
+
+	public static long V(String tableName, String columnName) {
+		return BPlusTree.bPlusTreeStructure.get(tableName).get(columnName).distinctCols;
 	}
 
 	public static Vector<String> getLine(String tableName, int start, int end,
@@ -499,6 +505,26 @@ public class DBSystem {
 		}
 	}
 
+	public static void inserInIndex(String tableName, String record) {
+
+		// insertRecord(tableName, record);
+		String[] colval = DBSystem.splitTableRow(record);
+		int i = 0;
+		Vector<pageNumInfo> v = DBSystem.pageTree.get(tableName).pageNum;
+		Integer lineNumber = v.get(v.size() - 1).endingLine;
+		for (Entry<String, String> colentry : DBSystem.pageTree.get(tableName).coltypepair
+				.entrySet()) {
+			String colName = colentry.getKey();
+			if (BPlusTree.bPlusTreeStructure.get(tableName)
+					.containsKey(colName)) {
+				BPlusTree.bPlusTreeStructure.get(tableName).get(colName)
+						.addWithDuplicationHandled(colval[i], lineNumber);
+			}
+			i++;
+		}
+
+	}
+
 	public static void insertRecord(String tableName, String record)
 
 	throws IOException {
@@ -537,6 +563,8 @@ public class DBSystem {
 		// if page not found
 		pC = updateTableAndDisk(tableName, record);
 		insertInLRU(pC, 0);
+		DBSystem.inserInIndex(tableName, record);
+
 	}
 
 	public static void printLRU() {
