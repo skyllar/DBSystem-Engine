@@ -1,0 +1,34 @@
+Parser Used : gsp parser (java)
+Libraries required : GSP Parser Library
+
+To Run:
+bash run.sh <Path to Config File> <Path to Input File>
+
+*****************************Validation of SQL Query can Handle*****************************
+	1.Data types matching(integer,varchar,float)
+	2.Brackets and their nesting within where and having clause
+	3.Aliasing of tables
+	4.Other type of Validation of SQL statements
+
+******************************Execution of Query***************************************
+	Index is initially created for all the columns of the table
+	For each query:
+		Validation is checked
+		Conditions are checked and corresponding line numbers are stored in set
+		Records from the file are fetched only for these line numbers
+		Records are obtained from LRU everytime. So Better page size and Page count will improve the performance
+		
+***************************Extra Features and Cases Handled*******************************
+
+(1) Where clause can include nested brackets.
+(2) Where clause can include any combination of 'And'/'OR' operators with brackets.
+(3) Associativity of the operators (including brackets) has been taken careof
+
+***********************************Phase 4 Added *************************************************
+
+(1) Join between two relations is handled
+(2) Number of distinct rows can be obtained from V(tablename,columnName)
+(3) If number of tables in the inner join query is more than two, the optimised order of the execution is displayed along with the cost to execute it
+(4) For optimal order, concept of Matrix chain multiplication is used with change in the cost factor
+
+
